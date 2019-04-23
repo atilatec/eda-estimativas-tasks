@@ -9,6 +9,7 @@ theme: sandstone
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(here)
+library(ggpubr)
 source(here::here("code/lib.R"))
 theme_set(theme_bw())
 
@@ -75,6 +76,60 @@ por_time = estimativas_raw %>%
 
 ## Qual a relação entre as estimativas e horas reais tomadas na empresa como um todo e em diferentes categorias de tarefa?
 
+```{r}
+#Gráfico de Dispersão (Eixo X escala logarítmica base 10)
+estimativas %>%
+    ggplot(aes(y=HoursActual, , x=HoursEstimate, color= Category))+
+    #scale_x_log10()+
+    scale_x_continuous(breaks = seq(0,1000,100))+
+    scale_y_continuous(breaks = seq(0,3000,100))+
+    geom_jitter()+
+    labs(x="Horas Estimadas", y="Horas Efetivadas",
+        title="       Relção entre Horas Estimadas x Horas Efetivadas",
+        caption = "Fonte: autor")
+
+#Gráfico de Dispersão com correlção Pearson (Eixo X escala logarítmica base 10)
+ggscatter(estimativas, y = "HoursActual", x = "HoursEstimate", 
+          add = "reg.line", conf.int = TRUE, shape = 20, size = 2,
+          cor.coef = TRUE, cor.method = "pearson", color = "Category",
+          xlab = "Horas Estimadas", ylab = "Horas Efetivadas")+
+scale_x_log10()
+ 
+#Gáfico de Dispersão com correlção Pearson dividido por categoria (Eixo X escala logarítmica base 10)
+ggscatter(estimativas, y = "HoursActual", x = "HoursEstimate", 
+          add = "reg.line", conf.int = TRUE, shape = 20, size = 2,
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "Horas Estimadas", ylab = "Horas Efetivadas")+
+scale_x_log10()+
+facet_wrap(~Category) 
+```
+
+
+###Análise
+Analisando os gráficos de dispersão acima, observamos que a tendência (sinal) do gráfico é uma leve inclinação positiva (observamos melhor no segundo gráfico, onde a escala do eixo X é logarítmica) e que a correlação entre as variáveis apresentadas é fraca, ou seja, índice próximo a zero (R=0,29, método Pearson). Podemos observar também que a categoria de desenvolvedor é a que possui notoriamente mais projetos, tendo uma maior concentração de horas estimadas entre 100h e 200h e horas efetivas variando entre 200h e 500h. Alguns pontos fora da curva podem ser notados nos gráficos. 
 
 ## Equipes com mais desenvolvedores produzem estimativas com mais ou menos erro que equipes menores? 
+
+```{r}
+
+#Gáficos de Dispersão 
+por_time %>%
+    ggplot(aes(y=erro_medio_abs, x=devs))+
+    geom_jitter()+
+    scale_x_log10()+
+    labs(x="Número de Desenvolvedores", y="Número de Erros Médios Absoluto",
+        title="       Relção entre Número de Erros Médio Absoluto x Número de Desenvolvedores",
+        caption = "Fonte: autor")
+
+ggscatter(por_time, y = "erro_medio_abs", x = "devs", 
+          add = "reg.line", conf.int = TRUE, shape = 20, size = 2,
+          cor.coef = TRUE, cor.method = "pearson", 
+          xlab = "Número de Desenvolvedores", ylab = "Número de Erros Absolutos")+
+scale_x_log10()
+
+```
+
+
+###Análise
+Observamos no gráfico acima, que o sinal tende a ser negativo, com um índice de correlação entre as variáveis muito fraco (R = -0,16, método Pearson). Podemos Inferir também, que um número maior de desenvolvedores não necessariamente acarreta mais erros.Visualizamos extremos com números baixos e altos de desenvolvedores.
 
